@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>토론 연습 시뮬레이터</title>
+  <!-- Google Fonts: Outfit & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- LEFT SIDEBAR: Topics & History -->
+    <aside class="sidebar-left">
+      <div class="brand">
+        <i class="fa-solid fa-graduation-cap brand-icon"></i>
+        <div class="brand-text">
+          <h1>DebateSim</h1>
+          <span class="subtitle">토론 연습 시뮬레이터</span>
+        </div>
+      </div>
+
+      <button id="btn-new-debate" class="btn-primary-neon btn-full">
+        <i class="fa-solid fa-plus"></i> 새 토론 시작하기
+      </button>
+
+      <!-- Topic Section -->
+      <div class="sidebar-section">
+        <h3 class="section-title"><i class="fa-solid fa-lightbulb"></i> 추천 토론 주제</h3>
+        <ul id="recommended-topics" class="topic-list">
+          <!-- Populated by JS -->
+        </ul>
+        
+        <div class="custom-topic-input">
+          <input type="text" id="input-custom-topic" placeholder="나만의 주제를 입력하세요...">
+          <button id="btn-add-custom-topic" title="주제 추가"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </div>
+
+      <!-- History Section -->
+      <div class="sidebar-section history-section">
+        <h3 class="section-title"><i class="fa-solid fa-history"></i> 이전 토론 기록</h3>
+        <div class="search-bar">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="search-history" placeholder="기록 검색...">
+        </div>
+        <div id="history-list" class="history-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+      <div class="sidebar-footer">
+        <button id="btn-settings" class="btn-text"><i class="fa-solid fa-cog"></i> API 설정</button>
+        <span class="version">v1.0.0</span>
+      </div>
+    </aside>
+
+    <!-- CENTER PANEL: main stages of debate -->
+    <main class="main-content">
+      <!-- Top Navigation & Progress Bar -->
+      <header class="main-header">
+        <div class="progress-container">
+          <div class="progress-bar-bg">
+            <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <div class="steps-indicator">
+            <div class="step-indicator active" id="step-ind-1" data-step="1">
+              <span class="step-number">1</span>
+              <span class="step-label">주제/입장</span>
+            </div>
+            <div class="step-indicator" id="step-ind-2" data-step="2">
+              <span class="step-number">2</span>
+              <span class="step-label">주장 작성</span>
+            </div>
+            <div class="step-indicator" id="step-ind-3" data-step="3">
+              <span class="step-number">3</span>
+              <span class="step-label">재반박 연습</span>
+            </div>
+            <div class="step-indicator" id="step-ind-4" data-step="4">
+              <span class="step-number">4</span>
+              <span class="step-label">최종 리포트</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- STAGE 1: Topic and Position Selection -->
+      <section id="stage-1" class="stage-section active">
+        <div class="hero-card">
+          <h2>오늘 어떤 주제에 대해 토론해보시겠습니까?</h2>
+          <p>왼쪽 목록에서 주제를 선택하거나 직접 작성한 후, 아래에서 자신의 입장을 선택하십시오.</p>
+        </div>
+
+        <div class="selected-topic-container card-neon">
+          <span class="badge-accent">선택된 주제</span>
+          <h1 id="stage1-selected-topic-title" class="topic-highlight">주제를 선택해 주세요.</h1>
+        </div>
+
+        <div class="position-selection-grid">
+          <button id="btn-select-pro" class="position-card pro" data-position="PRO">
+            <div class="pos-icon"><i class="fa-solid fa-thumbs-up"></i></div>
+            <div class="pos-details">
+              <h3>찬성 (PRO)</h3>
+              <p>주제의 주장을 지지하며 논리를 펼칩니다.</p>
+            </div>
+          </button>
+
+          <button id="btn-select-con" class="position-card con" data-position="CON">
+            <div class="pos-icon"><i class="fa-solid fa-thumbs-down"></i></div>
+            <div class="pos-details">
+              <h3>반대 (CON)</h3>
+              <p>주제의 주장에 반박하며 대응 논리를 펼칩니다.</p>
+            </div>
+          </button>
+        </div>
+
+        <div class="stage-actions">
+          <button id="btn-stage1-next" class="btn-primary-neon btn-lg">
+            주장 작성 단계로 이동 <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- STAGE 2: User Argument Form -->
+      <section id="stage-2" class="stage-section">
+        <div class="stage-header-info">
+          <div class="stage-badge">STEP 2</div>
+          <h2>논리적인 주장을 구조화하여 입론하십시오.</h2>
+          <p>각 입력 항목을 채우고 반론을 요청하세요. 작성된 내용은 자동 저장됩니다.</p>
+        </div>
+
+        <div class="topic-info-strip">
+          <span class="pos-badge" id="stage2-pos-badge">찬성</span>
+          <h3 id="stage2-topic-title">주제 제목</h3>
+        </div>
+
+        <div class="form-container">
+          <div class="form-group card">
+            <label for="input-main-claim"><i class="fa-solid fa-bullseye label-icon"></i> 핵심 주장 (Main Claim)</label>
+            <textarea id="input-main-claim" placeholder="이 주제에 대한 당신의 핵심 결론을 한 문장으로 명확하게 요약해 주세요. (예: 주 4일 근무제는 업무 생산성을 향상시키고 근로자의 삶의 질을 높이므로 도입되어야 한다.)" maxlength="200"></textarea>
+            <span class="char-count" id="count-main-claim">0 / 200</span>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group card">
+              <label for="input-premise-1"><i class="fa-solid fa-check label-icon"></i> 근거 1 (Argument 1)</label>
+              <textarea id="input-premise-1" placeholder="주장을 뒷받침할 핵심 근거 혹은 통계를 기재하세요."></textarea>
+            </div>
+            <div class="form-group card">
+              <label for="input-premise-2"><i class="fa-solid fa-check label-icon"></i> 근거 2 (Argument 2)</label>
+              <textarea id="input-premise-2" placeholder="두 번째 독립적인 논리적 근거를 기재하세요."></textarea>
+            </div>
+          </div>
+
+          <div class="form-group card">
+            <label for="input-example"><i class="fa-solid fa-quote-left label-icon"></i> 예상 사례 및 증거 (Evidence / Case)</label>
+            <textarea id="input-example" placeholder="근거를 뒷받침하는 실제 사례, 학술 데이터, 설문조사 결과 또는 역사적 사실을 기재하세요."></textarea>
+          </div>
+        </div>
+
+        <div class="stage-actions">
+          <button id="btn-stage2-prev" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> 입장 수정</button>
+          <button id="btn-request-rebuttal" class="btn-primary-neon btn-lg">
+            AI 반론 생성 요청 <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- STAGE 3: Counter-argument and User Rebuttal -->
+      <section id="stage-3" class="stage-section">
+        <div class="stage-header-info">
+          <div class="stage-badge">STEP 3</div>
+          <h2>AI의 반론에 논리적으로 응수하십시오.</h2>
+          <p>상대의 반론을 꼼꼼하게 읽고, 비판적 시각으로 재반박 논리를 펼쳐 주십시오.</p>
+        </div>
+
+        <div class="topic-info-strip">
+          <span class="pos-badge" id="stage3-pos-badge">찬성</span>
+          <h3 id="stage3-topic-title">주제 제목</h3>
+        </div>
+
+        <div class="debate-arena">
+          <!-- Left: User's Original Claim (Collapsed Summary) -->
+          <div class="card my-claim-summary-card">
+            <h4><i class="fa-solid fa-user"></i> 나의 입론 요약</h4>
+            <div class="claim-summary-content">
+              <p><strong>[핵심]</strong> <span id="summary-main-claim">핵심 주장 내용</span></p>
+              <p><strong>[근거 1]</strong> <span id="summary-premise-1">근거 1 내용</span></p>
+              <p><strong>[근거 2]</strong> <span id="summary-premise-2">근거 2 내용</span></p>
+            </div>
+          </div>
+
+          <!-- Center: AI Counter-Argument (Navy Card with Neon Accents) -->
+          <div class="ai-rebuttal-box card-neon">
+            <div class="box-header">
+              <span class="bot-badge"><i class="fa-solid fa-robot"></i> AI 반론 (Opponent Rebuttal)</span>
+            </div>
+            <div class="ai-content-sections">
+              <div class="ai-sec">
+                <span class="sec-label pro-color"><i class="fa-solid fa-times-circle"></i> 주장 반박</span>
+                <p id="ai-rebuttal-claim">로딩 중...</p>
+              </div>
+              <div class="ai-sec">
+                <span class="sec-label con-color"><i class="fa-solid fa-triangle-exclamation"></i> 근거 비판</span>
+                <p id="ai-rebuttal-premise">로딩 중...</p>
+              </div>
+              <div class="ai-sec">
+                <span class="sec-label alt-color"><i class="fa-solid fa-route"></i> 대안 제시</span>
+                <p id="ai-rebuttal-alternative">로딩 중...</p>
+              </div>
+              <div class="ai-sec">
+                <span class="sec-label question-color"><i class="fa-solid fa-circle-question"></i> 예상 질문</span>
+                <p id="ai-rebuttal-question">로딩 중...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom: User Rebuttal Input -->
+          <div class="form-group card user-rebuttal-input-box">
+            <label for="input-user-rebuttal"><i class="fa-solid fa-reply label-icon"></i> 나의 재반박 작성 (Your Rebuttal)</label>
+            <textarea id="input-user-rebuttal" placeholder="AI의 반박에 대응하여 논박을 완성해 주세요. 질문에 답하고, 상대 대안의 취약점을 공격하며 본인의 주장을 보강하세요."></textarea>
+          </div>
+        </div>
+
+        <div class="stage-actions">
+          <button id="btn-stage3-prev" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> 입론 수정</button>
+          <button id="btn-analyze-debate" class="btn-primary-neon btn-lg">
+            분석 및 리포트 생성 <i class="fa-solid fa-chart-line"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- STAGE 4: Final Debate Report & Score Analysis -->
+      <section id="stage-4" class="stage-section">
+        <div id="report-printable-area">
+          <div class="report-header">
+            <div class="report-meta">
+              <span id="report-date">2026.06.12</span>
+              <span id="report-position" class="badge">찬성</span>
+            </div>
+            <h1 id="report-topic">토론 주제</h1>
+            <p class="report-subtitle">토론 트레이닝 결과 리포트</p>
+          </div>
+
+          <!-- Scores Grid -->
+          <div class="scores-grid">
+            <div class="score-card">
+              <div class="score-radial-progress" id="score-radial-logic" data-score="0">
+                <svg width="80" height="80">
+                  <circle cx="40" cy="40" r="34" class="radial-bg"></circle>
+                  <circle cx="40" cy="40" r="34" class="radial-value" id="circle-logic"></circle>
+                </svg>
+                <span class="score-value" id="score-text-logic">0</span>
+              </div>
+              <h4>논리 연결성</h4>
+              <p>핵심 주장과 근거 간 논리 구조의 타당성</p>
+            </div>
+
+            <div class="score-card">
+              <div class="score-radial-progress" id="score-radial-evidence" data-score="0">
+                <svg width="80" height="80">
+                  <circle cx="40" cy="40" r="34" class="radial-bg"></circle>
+                  <circle cx="40" cy="40" r="34" class="radial-value" id="circle-evidence"></circle>
+                </svg>
+                <span class="score-value" id="score-text-evidence">0</span>
+              </div>
+              <h4>근거 활용도</h4>
+              <p>제시한 사례와 데이터의 적절한 활용도</p>
+            </div>
+
+            <div class="score-card">
+              <div class="score-radial-progress" id="score-radial-persuasion" data-score="0">
+                <svg width="80" height="80">
+                  <circle cx="40" cy="40" r="34" class="radial-bg"></circle>
+                  <circle cx="40" cy="40" r="34" class="radial-value" id="circle-persuasion"></circle>
+                </svg>
+                <span class="score-value" id="score-text-persuasion">0</span>
+              </div>
+              <h4>설득력</h4>
+              <p>표현의 구체성과 논리적 흐름의 강력함</p>
+            </div>
+
+            <div class="score-card">
+              <div class="score-radial-progress" id="score-radial-response" data-score="0">
+                <svg width="80" height="80">
+                  <circle cx="40" cy="40" r="34" class="radial-bg"></circle>
+                  <circle cx="40" cy="40" r="34" class="radial-value" id="circle-response"></circle>
+                </svg>
+                <span class="score-value" id="score-text-response">0</span>
+              </div>
+              <h4>반론 대응력</h4>
+              <p>AI 반론 비판에 대한 적절한 방어와 공격</p>
+            </div>
+          </div>
+
+          <!-- Report Content Breakdown -->
+          <div class="report-breakdown">
+            <div class="breakdown-two-column">
+              <div class="card shadow-sm">
+                <h3><i class="fa-solid fa-user-pen"></i> 내 주장 요약</h3>
+                <p id="report-summary-user" class="summary-p">입력한 주장이 없습니다.</p>
+              </div>
+              <div class="card shadow-sm">
+                <h3><i class="fa-solid fa-robot"></i> 상대 반론 요약</h3>
+                <p id="report-summary-ai" class="summary-p">반론이 생성되지 않았습니다.</p>
+              </div>
+            </div>
+
+            <div class="card mt-4 shadow-sm report-feedback-card">
+              <h3><i class="fa-solid fa-ranking-star"></i> 종합 피드백</h3>
+              <div class="feedback-grid">
+                <div class="feedback-col pro-feedback">
+                  <span class="tag-title tag-pro"><i class="fa-solid fa-circle-check"></i> 강점 (Strengths)</span>
+                  <ul id="report-strengths">
+                    <!-- JS loaded -->
+                  </ul>
+                </div>
+                <div class="feedback-col con-feedback">
+                  <span class="tag-title tag-con"><i class="fa-solid fa-circle-minus"></i> 보완점 (Weaknesses)</span>
+                  <ul id="report-weaknesses">
+                    <!-- JS loaded -->
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="card mt-4 shadow-sm report-advice-card">
+              <h3><i class="fa-solid fa-graduation-cap"></i> 다음 토론을 위한 조언</h3>
+              <p id="report-advice">조언 내용 로딩 중...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-actions print-hidden">
+          <button id="btn-restart" class="btn-secondary"><i class="fa-solid fa-rotate-left"></i> 처음으로</button>
+          
+          <div class="export-buttons">
+            <button id="btn-export-txt" class="btn-outline-neon"><i class="fa-solid fa-file-lines"></i> TXT 저장</button>
+            <button id="btn-export-pdf" class="btn-primary-neon"><i class="fa-solid fa-file-pdf"></i> PDF 저장</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- RIGHT PANEL: Timers & AI Status -->
+    <aside class="sidebar-right">
+      <!-- Session Tracker -->
+      <div class="tracker-card card">
+        <h4 class="tracker-title">토론 진행 상황</h4>
+        <div class="tracker-item">
+          <span>자동 저장</span>
+          <span id="autosave-status" class="status-badge success"><i class="fa-solid fa-cloud-arrow-up"></i> 활성화됨</span>
+        </div>
+        <div class="tracker-item">
+          <span>네트워크 상태</span>
+          <span id="network-status" class="status-badge normal"><i class="fa-solid fa-wifi"></i> 로컬 AI 모드</span>
+        </div>
+      </div>
+
+      <!-- Timer Box -->
+      <div class="timer-card card-neon">
+        <h3 class="card-title"><i class="fa-regular fa-clock"></i> 제한 시간 타이머</h3>
+        
+        <div class="timer-preset-selectors">
+          <button class="btn-preset active" data-time="60">1분</button>
+          <button class="btn-preset" data-time="180">3분</button>
+          <button class="btn-preset" data-time="300">5분</button>
+        </div>
+
+        <div class="timer-display" id="timer-display">01:00</div>
+        
+        <div class="timer-controls">
+          <button id="btn-timer-start" class="btn-timer-ctrl btn-play"><i class="fa-solid fa-play"></i> 시작</button>
+          <button id="btn-timer-reset" class="btn-timer-ctrl btn-reset"><i class="fa-solid fa-arrows-rotate"></i></button>
+        </div>
+      </div>
+
+      <!-- Logic Checklist / Guide Box -->
+      <div class="guide-card card">
+        <h3 class="card-title"><i class="fa-solid fa-map-signs"></i> 토론 팁 및 체크리스트</h3>
+        <ul id="stage-guides" class="guide-list">
+          <!-- Dynamic Guide Content according to active steps -->
+        </ul>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- SETTINGS MODAL (Gemini API Configuration) -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-content card">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-cog"></i> API 설정</h2>
+        <button id="btn-close-modal" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p>토론 연습 시뮬레이터는 기본적으로 <strong>로컬 시뮬레이션용 Mock AI Engine</strong>으로 작동합니다. 더 정교하고 상황에 특화된 피드백을 받으려면 Gemini API Key를 등록하세요.</p>
+        
+        <div class="form-group mt-4">
+          <label for="input-api-key"><i class="fa-solid fa-key"></i> Gemini API Key</label>
+          <input type="password" id="input-api-key" placeholder="AIzaSy...">
+          <small class="helper-text">입력하신 API Key는 로컬 브라우저 보안 저장소(localStorage)에만 안전하게 보관됩니다.</small>
+        </div>
+
+        <div class="form-group mt-4">
+          <label for="select-ai-mode"><i class="fa-solid fa-robot"></i> 작동 모드</label>
+          <select id="select-ai-mode">
+            <option value="mock">오프라인 Mock AI 모드 (기본)</option>
+            <option value="gemini">Gemini API 연동 모드 (인터넷 필수)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn-primary-neon">설정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
